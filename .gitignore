@@ -1,0 +1,10 @@
+# Secrets / local config — never commit
+config.yaml
+*.local.*
+.env
+*.key
+
+# OS / editor junk
+.DS_Store
+__pycache__/
+*.pyc

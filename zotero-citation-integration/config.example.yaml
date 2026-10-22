@@ -1,0 +1,18 @@
+zotero:
+  api_key: "XXX"
+  library_id: "XXX"       # numeric user ID resolved via /keys/<apikey>
+  library_type: "user"          # "user" or "group"
+  username: "xxx"
+
+citation:
+  default_style: "jacs"
+  csl_path: "./templates/jacs.csl"
+
+external_sources:
+  crossref: true
+  pubmed: true
+  openalex: true
+
+behavior:
+  deduplicate_by_doi: true
+  auto_add_missing: true
