@@ -5,7 +5,7 @@ Private collection of agent skills (`<name>/SKILL.md` format), shared across mac
 ## Install on a new machine
 
 ```bash
-git clone git@github.com:<user>/agent-skills.git ~/.claude/skills
+git clone git@github.com:JamesLike/agent-skills.git ~/.claude/skills
 ```
 
 For OpenCode or other agents that don't read `~/.claude/skills`, point them at the
