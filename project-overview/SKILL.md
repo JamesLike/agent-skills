@@ -1,111 +1,146 @@
 ---
 name: project-overview
-description: Set up or refresh the shared, tool-agnostic context layer for a research software project so any coding agent (Claude Code, OpenCode, etc.) on any machine (laptop, S3DF/psana, other clusters) can pick up work. Creates AGENTS.md (index + environments), CLAUDE.md, science/ context distilled from grants, talks and papers, TODO.md, and docs/agent/ state and handoff files. Trigger on requests like "write a project overview", "set up AGENTS.md", "scaffold project context", "make this repo agent-ready", "distill my grant into project context", "set up handoff files", or "refresh the project overview".
+description: Set up or refresh a project's shared agent context in the central research-hub repo (~/projects/research-hub), so any agent (Claude Code, OpenCode, etc.) on any machine (mac, S3DF/psana, other clusters) can pick up the work. Creates projects/<name>/ in the hub (CARD, STATUS, TODO, DECISIONS, methods, locations, handoffs), registers the project in PROJECTS.md and repos.conf, distills grants/talks/papers into project and shared science context, and gives the code repo a short AGENTS.md/CLAUDE.md pointing to the hub. Trigger on requests like "write a project overview", "set up AGENTS.md", "add this project to the hub", "make this repo agent-ready", "scaffold project context", "distill my grant into project context", "set up handoffs", or "refresh the project overview".
 ---
 
-# Project Overview & Shared Agent Context
+# Project Overview → research-hub
 
-Builds a **plain-text, git-tracked context layer** so a project's goals, science, environments, to-dos and progress travel with the repo instead of living in one tool's memory on one machine.
-
-Guiding principles (apply them throughout):
-
-1. **Git is the only shared memory.** Nothing important lives only in `~/.claude`, OpenCode sessions, or chat history.
-2. **Layers.** `AGENTS.md` is a short index (about a page). Detail lives in files it points to, which are loaded only when a task needs them.
-3. **Distill, don't dump.** A 2-page `aims.md` beats a 40-page grant PDF. Originals stay outside git (or in LFS). Markdown extracts and summaries go in.
-4. **Never invent science.** Every claim in `science/` is traceable to a source the user provided, or marked `TODO(verify)`.
-5. **Never overwrite silently.** If a file exists, merge into it and show the diff.
-
-Templates for every file are in [references/templates.md](references/templates.md). Read it before writing files.
-
-## Workflow
-
-### 1. Survey what exists
-
-Do this before asking the user anything:
-
-- Repo layout (`git ls-files | head -200`, top-level dirs), README, build/test config (`pyproject.toml`, `setup.py`, `environment.yml`, `Makefile`, CI files, SLURM scripts).
-- Existing context files: `AGENTS.md`, `CLAUDE.md`, `.claude/`, `.opencode/`, `docs/`, `TODO*`, `NOTES*`, `CHANGELOG`.
-- `git log --oneline -30` for recent direction of work.
-- Hints of compute environments: hard-coded paths like `/sdf/...`, `sbatch` headers, conda env names, `psana` imports.
-
-### 2. Collect the soft context
-
-Ask in **one** message, and only for what the survey didn't answer:
-
-- **Sources:** paths to grants, proposals, papers, slide decks, or notes to distill. Accept PDF/DOCX/PPTX/MD and read them with the matching skill.
-- **Environments:** each machine or cluster used, with data locations, env activation, job submission, network limits, and what must *not* run where (e.g. heavy jobs on login nodes).
-- **Audience & outputs:** planned papers and talks, target venues, collaborators, and whether to use GitHub Issues or `TODO.md` for the backlog.
-- **Sensitivity:** whether the repo is private or public. If public or unknown, do **not** put unpublished grant text or results in it. Ask first.
-
-If the user says "just do it", proceed with what's available and leave `TODO(user)` markers.
-
-### 3. Create the structure
-
-Create only what's missing:
+All agent context, progress, and handoffs live in one central repo, **research-hub**, cloned at
+`~/projects/research-hub` on every machine (GitHub: `JamesLike/research-hub`). Code repos and
+cluster folders hold code, analysis, and data, and the hub records **where** they are.
 
 ```
-AGENTS.md                  # index, rules, environments  (≤ ~120 lines)
-CLAUDE.md                  # one line: @AGENTS.md
-TODO.md                    # unless the user chose GitHub Issues
-science/OVERVIEW.md        # question, hypotheses, significance (1–2 pages)
-science/aims.md            # aims → sub-aims → deliverables → status
-science/glossary.md        # terms, symbols, units, naming conventions
-science/methods.md         # approach, data, known pitfalls
-science/literature/README.md + references.bib
-science/sources/           # markdown extracts of originals (+ pointer to where originals live)
-docs/agent/STATUS.md
-docs/agent/HANDOFF.md
-docs/agent/DECISIONS.md
-docs/agent/prompts/start.md
-docs/agent/prompts/end.md
+~/projects/research-hub/
+├── AGENTS.md  machines.md  PROJECTS.md  repos.conf  sync.sh  prompts/{start,end}.md
+├── science/  grants/  literature/  talks/        # shared across projects
+└── projects/
+    ├── _template/                               # canonical templates: copy, don't reinvent
+    └── <name>/  CARD.md STATUS.md TODO.md DECISIONS.md methods.md locations.md handoffs/
 ```
 
-Add `papers/` or `talks/` folders only if the user has planned outputs. Add `.gitignore` entries for data and large outputs (`*.h5`, `*.xtc2`, `slurm-*.out`, scratch dirs) if they're missing.
+Principles:
+1. **The hub is the only shared memory.** Nothing important lives only in `~/.claude`, OpenCode
+   sessions, chat history, or uncommitted files.
+2. **Pointers, not copies.** Never copy code or data into the hub. Record path + machine +
+   repo@commit in `locations.md`.
+3. **Distill, don't dump.** Short, sourced summaries; originals go in `originals/` (git-ignored).
+4. **Never invent science.** Tag claims `[src: <file> §<section>]`, or mark them `TODO(verify)`.
+5. **Never overwrite silently.** Merge into existing files and show the diff.
+6. **Handoffs are append-only.** One new file per session; earlier ones are never edited.
 
-### 4. Distill the science
+## 0. Locate the hub
 
-For each source document:
+- `HUB=~/projects/research-hub`. If it's missing, ask: clone it
+  (`git clone git@github.com:JamesLike/research-hub.git ~/projects/research-hub`), or, if the user
+  has no hub, use standalone mode (see the end of this file).
+- Run `$HUB/sync.sh` to get the latest hub. Read `$HUB/AGENTS.md` and `$HUB/machines.md`, and
+  identify the current machine.
+- The project `<name>` defaults to the code repo's folder name. Confirm it if ambiguous.
 
-1. Write a markdown extract to `science/sources/<short-name>.md`: the key sections only, with a header stating the original filename, date, and where the original is stored.
-2. Fold its content into `OVERVIEW.md`, `aims.md`, `glossary.md` and `methods.md`.
-3. Cite inline as `[src: <short-name> §<section>]` so claims can be checked.
-4. Where sources disagree (e.g. an old grant vs. a newer talk), prefer the newer one, record the change in `DECISIONS.md`, and flag it for the user.
-5. In `aims.md`, map each aim to the code and analysis that serves it (`src/...`, `analysis/...`), or mark `not started`.
+## 1. Survey
 
-Keep tone factual. No marketing language from grants ("transformative", "unprecedented") unless it's quoted as such.
+Do this before asking the user anything.
 
-### 5. Write AGENTS.md last
+- **Hub:** does `projects/<name>/` exist? If so, this is a **refresh** (see below). Also check
+  `PROJECTS.md`, `repos.conf`, and any `grants/` or `science/` content relevant to this project.
+- **Code repo** (if there is one): layout (`git ls-files | head -200`), README, build/test config
+  (`pyproject.toml`, `environment.yml`, `Makefile`, CI), SLURM scripts, existing `AGENTS.md`,
+  `CLAUDE.md`, `docs/`, `TODO*`, and `git log --oneline -30`. Note the remote URL, branch, and HEAD SHA.
+- **Locations:** look for hard-coded paths (`/sdf/...`, scratch dirs, data dirs), `sbatch` headers,
+  experiment/run IDs, and output directories. These seed `locations.md`.
+- **Project without a repo** (e.g. analysis folders on S3DF): survey the folder(s) the user names.
+  `locations.md` becomes the main record.
 
-It indexes everything else, so write it after the rest exists. Required sections are in the template: Project in one paragraph, Where things live, Environments, Rules, Session protocol, When writing papers/talks. Every path it mentions must exist.
+## 2. Ask once
 
-### 6. Seed state files
+In one message, ask only for what the survey didn't answer:
+- **Sources:** grants, papers, slide decks, or notes for this project. Read them with the matching
+  file skill (pdf/docx/pptx).
+- **Locations:** where the data and analyses live on each machine; which machines run what.
+- **Grant/aim link,** collaborators, planned papers and talks.
+- **Sensitivity:** confirm the hub repo is private. If the code repo is or will be public, nothing
+  unpublished goes in it. The pointer `AGENTS.md` is the only thing added there.
 
-- `STATUS.md`: the current state as inferred from the survey and git log. Mark inferences `(inferred)`.
-- `TODO.md` (or Issues): seed from TODO/FIXME comments, aims marked `not started`, and anything the user mentioned. Group by area: Code / Analysis / Writing / Infra. Tag a machine where relevant, e.g. `[s3df]`.
-- `DECISIONS.md`: start with any decisions visible in the sources or git history.
-- `HANDOFF.md`: the first entry is this setup session.
+If the user says "just do it", proceed and leave `TODO(user)` markers.
 
-### 7. Verify
+## 3. Create the project folder in the hub
 
-- `AGENTS.md` is ≤ ~120 lines, and every referenced path exists (`grep -o` the paths and `test -e` each).
-- `CLAUDE.md` is exactly `@AGENTS.md` (plus optional Claude-only notes below it).
-- No secrets, tokens, passwords, or personal data in any file.
-- Every `science/` claim has a `[src: ...]` tag or a `TODO(verify)` marker.
-- `git status` shows only intended files. Do **not** commit unless the user asks.
+- `cp -R $HUB/projects/_template $HUB/projects/<name>`, delete `handoffs/TEMPLATE.md` from the copy,
+  and fill every file from the survey and sources:
+  - `CARD.md`: what it is, repo, machines, grant/aims table, outputs, key results, related projects.
+  - `STATUS.md`: the current state. Mark inferences `(inferred)`. The header records machine, agent,
+    repo@branch SHA.
+  - `TODO.md`: seed from TODO/FIXME comments, unfinished aims, and the user's notes. Tag machines.
+  - `DECISIONS.md`: decisions visible in the sources or git history.
+  - `methods.md`: data, pipeline (pointing to code paths), pitfalls, validation.
+  - `locations.md`: code, input data, and every known analysis/output with machine + path +
+    producing repo@commit/script/job.
+- Delete template sections that don't apply rather than leaving them empty.
 
-### 8. Report
+## 4. Register it
 
-Tell the user:
+- Add or update the project's row in `$HUB/PROJECTS.md`, linking to `projects/<name>/CARD.md`.
+- Add a line to `$HUB/repos.conf` (`projects/<name>  <git URL>  <machines>`) if there's a code repo.
+- If the project needs a machine that isn't in `machines.md`, add a section for it (with TODOs).
 
-- which files you created or changed, and what you merged into existing ones
-- the `TODO(verify)` / `TODO(user)` items needing their input, as a short list
-- the two habits that make this work: run `docs/agent/prompts/start.md` at the start of each session and `end.md` at the end, on any machine and with any agent
+## 5. Distill the science
 
-## Refreshing an existing setup
+- **Shared** material (applies to several projects: grants, the program overview, glossary, literature)
+  goes in `$HUB/grants/<grant>/{source,aims}.md`, `$HUB/science/`, and `$HUB/literature/`.
+- **Project-specific** material goes in `projects/<name>/CARD.md` and `methods.md`.
+- For each source: put a markdown extract in `$HUB/grants/<grant>/source.md` (or
+  `science/sources/<short-name>.md` for non-grant documents), with a header giving the original
+  filename, date, and storage location. Copy the original to `$HUB/originals/`.
+- Map each aim to the project(s) that serve it, in both directions: `grants/<grant>/aims.md` ↔ the
+  `CARD.md` aims table.
+- Where sources disagree, prefer the newer one, log it in `DECISIONS.md`, and flag it for the user.
+- Keep the tone factual: no grant marketing language unless it's quoted.
 
-When the files already exist ("refresh the overview"):
+## 6. Point the code repo at the hub
 
-- Re-run steps 1 and 6. Update `STATUS.md` and the status column in `aims.md` from recent commits.
-- Prune: move completed TODOs to a `## Done (recent)` section, and flag aims or decisions the code no longer reflects.
-- Check that `AGENTS.md` is still short and its paths still resolve.
-- Show a diff summary rather than rewriting files wholesale.
+In the code repo, create or merge a short `AGENTS.md` using
+[references/templates.md](references/templates.md): how to build, test, and run, plus the pointer
+to `$HUB/projects/<name>/` and the session protocol. Keep it **≤ ~60 lines**, with no progress or
+state. Add `CLAUDE.md` containing `@AGENTS.md`. If the repo has old `docs/agent/` state files,
+migrate their content into the hub and leave a one-line note pointing there.
+
+Optionally suggest that the user add the hub to Claude Code's `additionalDirectories` for this repo,
+so agents can write to it.
+
+## 7. Write the first handoff
+
+`projects/<name>/handoffs/YYYY-MM-DD-HHMM-<machine>-<agent>.md`, following
+`_template/handoffs/TEMPLATE.md`, describing this setup session. Use the real current time (`date`).
+
+## 8. Verify
+
+- Every path in `CARD.md`, `locations.md`, and the code repo's `AGENTS.md` exists, or is marked as
+  living on another machine.
+- `$HUB/sync.sh status` lists the repo.
+- No secrets, tokens, passwords, or raw data in any file. Originals are only in `originals/`.
+- Every science claim has a `[src: ...]` tag or a `TODO(verify)` marker.
+
+## 9. Save and report
+
+- Show the user the hub diff and the code-repo diff. On their OK, run
+  `$HUB/sync.sh save "<name>: project overview"`. Commit the code repo only if they ask.
+- Report: files created or changed, the `TODO(user)` / `TODO(verify)` items that need their input, and
+  the habit that makes this work: `prompts/start.md` at the start and `prompts/end.md` at the end of
+  every session, on any machine.
+
+## Refreshing an existing project
+
+When `projects/<name>/` already exists:
+- Re-survey: read the handoffs newer than `STATUS.md`, `git log` since the SHA in `STATUS.md`, and any
+  new output directories.
+- Rewrite `STATUS.md`, prune `TODO.md` (move finished items to Done), add missing `locations.md`
+  entries, and flag anything in `CARD.md`/`methods.md` the code no longer matches.
+- If `handoffs/` has more than ~30 files, summarize the oldest into `handoffs/ARCHIVE.md` and delete
+  them (git history keeps them). Ask first.
+- Write a handoff for the refresh, show a diff summary, and save.
+
+## Standalone mode (no hub)
+
+If the user doesn't want a hub for this project, put the same project files in the code repo
+under `docs/agent/` (the same names, with `handoffs/` inside), put science context in `science/`, and
+make the repo's `AGENTS.md` point there instead. Everything else stays the same.
