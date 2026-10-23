@@ -8,3 +8,10 @@ config.yaml
 .DS_Store
 __pycache__/
 *.pyc
+
+# Skills from their own repos (psagents org): install separately, see README
+/ask-happi/
+/ask-lute/
+/beamtime-logger/
+/cds-bridge/
+/hutch-copilot

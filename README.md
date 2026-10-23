@@ -28,6 +28,7 @@ Skills that need credentials ship a `config.example.yaml`; copy it to
 
 | Skill | Purpose |
 |---|---|
+| `ask-mfx` | MFX beamline operations assistant: hutch-python session, XTC checks, scans, PVs, beam readiness, gotchas |
 | `approval` | Only execute your plan upon my approval… |
 | `breakdown` | Break down the questions/tasks in my prompt… |
 | `clarify-before-research` | Ask me clarifying questions before research… |
@@ -43,5 +44,19 @@ Skills that need credentials ship a `config.example.yaml`; copy it to
 | `scientific-code-auditor` | >… |
 | `senior-code-reviewer` | >… |
 | `taskify` | Instruct agents to create a task list to keep track of things… |
+| `write-to-pdf` | Generate PDFs on S3DF with reportlab (markdown→PDF, shift reports) |
 | `writing-style-reviewer` | >… |
 | `zotero-citation-integration` | "Citation management via a Zotero library: look up a DOI/PMID/arXiv ID/title in Zotero, format it in JACS styl… |
+
+## External skills (own repos, git-ignored here)
+
+Cloned into this folder separately. They're listed in `.gitignore` so this repo stays clean:
+
+```bash
+cd ~/.claude/skills
+git clone git@github.com:psagents/ask-happi.git
+git clone git@github.com:psagents/ask-lute.git
+git clone git@github.com:psagents/beamtime-logger.git
+git clone git@github.com:psagents/cds-bridge.git
+git clone git@github.com:psagents/hutch-copilot.git ~/hutch-copilot && ln -s ~/hutch-copilot hutch-copilot
+```
