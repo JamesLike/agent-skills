@@ -19,7 +19,9 @@ The library `scripts/slac_deck.py` implements those patterns; its docstring show
 
 2. **Gather the content from the source of truth, not memory.**
    - Project context: for projects in the research hub, read `~/projects/research-hub/projects/<name>/` (STATUS, newest
-     handoffs, NOTES with the numbers). `git pull` the hub and `git fetch` the code repo first — he often says "there are updates".
+     handoffs, NOTES with the numbers). Unless told otherwise, `git pull` the hub and `git fetch` the code repo first — he
+     often says "there are updates". If the notes cite a section that doesn't exist, or two sources disagree, say so in
+     the handover rather than picking one silently.
    - Notebook figures: `python3 scripts/notebook_figs.py nb.ipynb figdir` extracts every PNG output labelled by its section
      heading. Notebooks on other branches: `git show origin/<branch>:<nb>.ipynb > nb/<nb>.ipynb` first.
    - Figures from his old decks (schematics, cartoons, team photos): `python3 scripts/pptx_media.py deck.pptx outdir 2,19`
@@ -31,7 +33,7 @@ The library `scripts/slac_deck.py` implements those patterns; its docstring show
 3. **Outline before building.** One message per slide; group slides into builds; end each build on a takeaway or a
    rhetorical question that sets up the next one; put caveats where the result is. Share the outline briefly, then build.
 
-4. **Build.** Put the talk in a folder in the relevant project (e.g. `<repo>/talks/YYYY-MM_<topic>/`) with:
+4. **Build.** Put the talk where he asks, otherwise in a folder in the relevant project (e.g. `<repo>/talks/YYYY-MM_<topic>/`), with:
    - `build_deck.py` — imports `slac_deck` from this skill (`sys.path.insert(0, os.path.expanduser("~/.claude/skills/slac-talk/scripts"))`),
      composes the slides, saves the `.pptx`. Keep numbers in this script, near the slide that uses them, with a comment or
      `source=` saying where they came from, so a later "update the deck" is a small edit.
@@ -39,17 +41,20 @@ The library `scripts/slac_deck.py` implements those patterns; its docstring show
      shouldn't carry binaries.
    Typical calls: `cover`, `pitch` (4 quadrants), `build(title, [steps], notes=[...], source=...)` with `picture`, `text`
    (strings starting `-` are bullets; lists of `(text, bold)` runs for bold labels), `takeaway`, `callout`, `stat`, `table`,
-   charts; `labelled_list` for conclusions; `figure_slide` for backup.
+   charts; `process` for a method / phase band; `labelled_list` for conclusions; `figure_slide` for backup;
+   `crop` to cut one panel out of a multi-panel figure (pitch quadrants and half-width slots are small).
 
 5. **QA — always render and look.**
    - `python3 scripts/render_slides.py deck.pptx /tmp/render [--slides 5,38-51]` then
-     `python3 scripts/contact_sheet.py /tmp/render /tmp/sheet 3` and open the sheets with Read. Render only changed slides
-     on updates; a full render is ~3 s per slide.
+     `python3 scripts/contact_sheet.py /tmp/render /tmp/sheet 3`. The second argument is a file-name *prefix*: it writes
+     `/tmp/sheet-1.jpg`, `/tmp/sheet-2.jpg`, … and prints their paths; open them with Read. Render only changed slides on
+     updates; a full render is ~3 s per slide.
    - Look for: text wrapping into another element (long stat numbers, takeaways over figures), figures too small to read,
      uneven gaps, anything off the slide or over the bottom strip (y > 6.8 in is the logo/citation/number band).
    - Quick Look draws Lato as Times, ignores autofit and renders charts roughly — check chart axes and dashes in the XML,
      not the render, and leave ~10% slack in text boxes.
-   - If the pptx skill's `scripts/office/validate.py` is available, run it with `--original assets/SLAC_template_FY27.pptx`.
+   - Optional: if the Anthropic pptx skill is installed, its `scripts/office/validate.py deck.pptx --original
+     assets/SLAC_template_FY27.pptx` checks the file structure. Skip it if it isn't there; python-pptx output is normally valid.
 
 6. **Hand over.** Give the path to the `.pptx`, the story in a few lines, what's assumed (audience, title-slide names, date),
    which numbers are preliminary or still running, and what Quick Look can't show. Commit only when asked; use his
@@ -65,4 +70,6 @@ Stale statements are the usual bug ("running", "queued", "not yet") — grep the
 - Don't use theme accent colours for shapes: interior accent1 is Office blue. Use the hex constants in `slac_deck`.
 - Bold-label paragraphs (lists of runs) aren't bulleted; plain `-` strings are.
 - Stat values longer than 8 characters drop to 28 pt automatically so they stay on one line; keep them short anyway.
+- Moving a placeholder: set `left`, `top`, `width` and `height` together; setting one alone zeroes the others.
+- `cover()` top-anchors the headline and drops to 44 pt for titles over 40 characters; still check it in the render.
 - His Mac has no LibreOffice and PowerPoint automation is blocked, hence the Quick Look renderer.

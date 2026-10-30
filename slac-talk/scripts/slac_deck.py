@@ -75,6 +75,15 @@ class SlacDeck:
         s = self.prs.slides.add_slide(self.cover_layout)
         for idx, val in ((10, title), (11, category), (12, presenter), (13, details)):
             self.ph(s, idx).text = val
+        # The layout's headline box is bottom-anchored and short, so a 2–3 line title runs into the category line.
+        # Give it explicit geometry (setting only .top on an inherited placeholder zeroes the other three) and top-anchor it.
+        head = self.ph(s, 10)
+        head.left, head.top, head.width, head.height = Inches(0.88), Inches(0.55), Inches(10.25), Inches(2.45)
+        head.text_frame._txBody.bodyPr.set("anchor", "t")
+        if len(title) > 40:
+            for p in head.text_frame.paragraphs:
+                for r in p.runs:
+                    r.font.size = Pt(44)
         if notes:
             s.notes_slide.notes_text_frame.text = notes
         return s
@@ -110,7 +119,8 @@ class SlacDeck:
         """Elevator pitch on the cover background, a cardinal cross dividing four quadrants revealed one at a time.
 
         quadrants: four (header, bold_lead, rest, image_path_or_None) tuples, in the order
-        question/problem → approach → result/impact → next/outlook.
+        question/problem → approach → result/impact → next/outlook. Image slots are small (top: 6.2 × 1.75 in,
+        bottom: ~3 × 2.8 in): use single-panel or illustrative images, cropping multi-panel plots with `crop`.
         """
         boxes = [  # (text x, y, w, h), (image x, y, w, h)
             ((0.3, 0.2, 6.15, 1.45), (0.3, 1.7, 6.15, 1.75)),
@@ -135,6 +145,53 @@ class SlacDeck:
                 s.notes_slide.notes_text_frame.text = notes[min(k, len(notes) - 1)]
             slides.append(s)
         return slides
+
+    def process(self, slide, steps, x=0.88, y=1.2, w=11.54, h=1.4, band=RGBColor(0xF6, 0xE7, 0xE9)):
+        """Phase / method band: a tinted strip of rounded boxes joined by arrows (FY27 "Project overview").
+        steps: [(title, detail), ...]; 3–5 fit across the slide. Returns the box shapes."""
+        bg = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(x), Inches(y), Inches(w), Inches(h))
+        bg.fill.solid()
+        bg.fill.fore_color.rgb = band
+        bg.line.fill.background()
+        bg.shadow.inherit = False
+        n, gap, pad = len(steps), 0.45, 0.15
+        bw = (w - 2 * pad - gap * (n - 1)) / n
+        boxes = []
+        for i, (head, detail) in enumerate(steps):
+            bx = x + pad + i * (bw + gap)
+            b = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(bx), Inches(y + pad), Inches(bw), Inches(h - 2 * pad))
+            b.fill.solid()
+            b.fill.fore_color.rgb = WHITE
+            b.line.color.rgb = ACCENT
+            b.line.width = Pt(1)
+            b.shadow.inherit = False
+            tf = b.text_frame
+            tf.word_wrap = True
+            for j, (t, bold, size, color) in enumerate(((head, True, 13, CARDINAL), (detail, False, 11, BLACK))):
+                p = tf.paragraphs[0] if j == 0 else tf.add_paragraph()
+                p.alignment = PP_ALIGN.CENTER
+                r = p.add_run()
+                r.text = t
+                r.font.bold, r.font.size, r.font.color.rgb = bold, Pt(size), color
+            boxes.append(b)
+            if i:
+                ax = bx - gap
+                c = slide.shapes.add_connector(MSO_CONNECTOR.STRAIGHT, Inches(ax + 0.06), Inches(y + h / 2),
+                                               Inches(bx - 0.06), Inches(y + h / 2))
+                c.line.color.rgb = CARDINAL
+                c.line.width = Pt(1.5)
+                etree.SubElement(c.line._get_or_add_ln(), qn("a:tailEnd"), type="triangle")
+        return boxes
+
+    @staticmethod
+    def crop(path, out, box):
+        """Crop a figure before placing it, e.g. one panel of a multi-panel notebook plot (wide strips come out
+        unreadably small in pitch quadrants and half-width slots). box = (left, top, right, bottom) as fractions."""
+        im = Image.open(path)
+        W, H = im.size
+        l, t, r, b = box
+        im.crop((int(W * l), int(H * t), int(W * r), int(H * b))).save(out)
+        return out
 
     def figure_slide(self, title, image, caption=None, source=None, notes=None):
         """One large figure with a caption: the backup-slide pattern."""

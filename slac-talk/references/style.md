@@ -55,8 +55,8 @@ same template but are colleagues' decks, not his style.
   columns plus Total in $k, then bold-label bullets for Effort / Resources / M&S.
 - **Native charts** (`line_chart`, `scatter_chart`): when the numbers exist but no figure does; dashed series for reference
   lines (e.g. "merge"), cardinal for the headline series, greys/soft red for the rest.
-- **Process / phases**: a light band per phase with small rounded boxes and arrows (FY27 "Project overview"); compose with
-  shapes on a content slide.
+- **Process / phases** (`process`): a tinted band of rounded boxes joined by arrows (FY27 "Project overview",
+  a method pipeline); one band per phase, revealed as a build.
 - **Team grid**: headshots with name, institution, role underneath, institution logos at the end (FY27 "Project team").
 - **Conclusions** (`labelled_list`): cardinal bold section labels, e.g. What works / Headline results / Barriers / Caveats,
   or Deliverables / Key risks → mitigations / Headline impact / Future opportunities.
