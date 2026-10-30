@@ -43,6 +43,7 @@ Skills that need credentials ship a `config.example.yaml`; copy it to
 | `project-overview` | Set up or refresh the shared, tool-agnostic context layer for a research software project so any coding agent … |
 | `scientific-code-auditor` | >… |
 | `senior-code-reviewer` | >… |
+| `slac-talk` | Build talks on the SLAC/Stanford template in James's style: progressive builds, takeaways, pitch quadrants, native charts; Quick Look QA |
 | `taskify` | Instruct agents to create a task list to keep track of things… |
 | `write-to-pdf` | Generate PDFs on S3DF with reportlab (markdown→PDF, shift reports) |
 | `writing-style-reviewer` | >… |
