@@ -7,7 +7,7 @@ PDF_DIR="${1:-$HOME/Downloads/blister}"
 OUT="$(cd "$(dirname "$0")/.." && pwd)/references/fulltext"
 mkdir -p "$OUT"
 for f in "$PDF_DIR"/*.pdf; do
-  y=$(basename "$f" | grep -oE '20[0-9]{2}-20[0-9]{2}') || continue
+  y=$(basename "$f" | grep -oE '20[0-9]{2}-(20)?[0-9]{2}' | head -1 | sed -E 's/^(20([0-9]{2}))-([0-9]{2})$/\1-20\3/') || continue; [ -n "$y" ] || continue
   tmp=$(mktemp)
   gs -q -dNOPAUSE -dBATCH -dSAFER -sDEVICE=txtwrite -o "$tmp" "$f"
   tr -s ' \t' ' ' < "$tmp" | sed 's/^ //' | grep -v '^\s*$' > "$OUT/$y.txt"

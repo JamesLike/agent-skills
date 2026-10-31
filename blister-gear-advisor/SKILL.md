@@ -1,6 +1,6 @@
 ---
 name: blister-gear-advisor
-description: Ski and snowboard gear advisor built on five Blister Winter Buyer's Guides (2022-23 through 2026-27). Use whenever James asks what skis, ski boots, touring bindings, climbing skins, snowboards, splitboards, snowboard bindings or boots, helmets, goggles or outerwear to buy, how two products compare, what to put in a ski quiver, whether to upgrade, how a ski or boot changed between model years, or what Blister thinks of a product, even if he doesn't mention Blister or the guides. Also use it for questions about ski specs, ski categories, Blister Spectrum rankings and Best Of awards.
+description: Ski and snowboard gear advisor built on six Blister Winter Buyer's Guides (2015-16, and 2022-23 through 2026-27). Use whenever James asks what skis, ski boots, touring bindings, climbing skins, snowboards, splitboards, snowboard bindings or boots, helmets, goggles or outerwear to buy, how two products compare, what to put in a ski quiver, whether to upgrade, how a ski or boot changed between model years, or what Blister thinks of a product, even if he doesn't mention Blister or the guides. Also use it for questions about ski specs, ski categories, Blister Spectrum rankings and Best Of awards.
 ---
 
 # Blister gear advisor
@@ -12,8 +12,8 @@ Answer gear-buying questions from Blister's Winter Buyer's Guides. The guides ar
 | File | Use it for |
 |---|---|
 | `references/summary.md` | Cross-year overview: overhauls by year, recurring benchmarks, themes. Read first for broad or "what's new" questions. |
-| `references/notes/<year>.md` (2022-2023 … 2026-2027) | Condensed notes for each guide, ~700-850 lines each. Every class overview, every product with measured specs and a condensed verdict, the Spectrum rankings (top → bottom), the Ski-Quiver Selections, Best Of awards and buying-advice articles. Main source. |
-| `references/fulltext/<year>.txt` | Full extracted guide text. Use it to check a detail the notes leave out or to confirm wording. Two-column pages are interleaved line by line, so read a window of lines around a hit and piece the sentences back together. |
+| `references/notes/<year>.md` (2015-2016, 2022-2023 … 2026-2027) | Condensed notes for each guide, ~700-850 lines each. Every class overview, every product with measured specs and a condensed verdict, the Spectrum rankings (top → bottom), the Ski-Quiver Selections, Best Of awards and buying-advice articles. Main source. |
+| `references/fulltext/<year>.txt` (2022-23 onward; none for 2015-16) | Full extracted guide text. Use it to check a detail the notes leave out or to confirm wording. Two-column pages are interleaved line by line, so read a window of lines around a hit and piece the sentences back together. |
 | `scripts/find_gear.py` | Searches notes (and full text with `--full`) for products or terms. Each hit shows the year and section. |
 
 Spec format in the notes: `shovel-waist-tail mm (length measured) | stated radius | weight per ski | tip splay/camber/tail splay mm | measured length | mount point vs true center / cm from tail | available lengths | core construction`. Specs marked "[as printed]" look like errors in Blister's own tables. Pass that caveat on to James rather than "correcting" them.
@@ -58,7 +58,8 @@ Keep it to 2-4 short questions, combined in one message. Skip asking when the qu
 **5. Be honest about limits.**
 - The guides have no prices (Blister doesn't print MSRPs). Don't invent prices. If price matters, offer to look up current street prices on the web.
 - The guides don't cover fitting: boots especially need a bootfitter, and Blister's boot advice is about shell shape, last width and flex, not guaranteed fit.
-- Coverage ends with the 2026-27 guide. Anything newer isn't in the data.
+- Coverage is 2015-16 plus 2022-23 to 2026-27. Nothing from 2016-17 to 2021-22 and nothing newer than 2026-27 is in the data, so models sold only in that gap (e.g. most Line Sick Day widths) aren't reviewed.
+- The 2015-16 guide had no text layer: its notes were read from page images, a few small spec digits (6/8, 3/5) are uncertain and flagged, and some weights are manufacturer-stated. Use it for older skis James owns or is considering used, not for current recommendations.
 - Spectrum rankings were rebuilt from scrambled multi-column text. Order within a few spots may be off, and the 2022-23 All-Mountain More Forgiving Spectrum is only partly rebuilt.
 
 ## Answer shape

@@ -17,7 +17,7 @@ import re
 from pathlib import Path
 
 REFS = Path(__file__).resolve().parent.parent / "references"
-YEARS = ["2022-2023", "2023-2024", "2024-2025", "2025-2026", "2026-2027"]
+YEARS = sorted(f.stem for f in (REFS / "notes").glob("20??-20??.md"))
 
 
 def search(path, patterns, max_len, with_sections):
@@ -59,8 +59,11 @@ def main():
         print(f"===== {y} notes: {len(hits)} hit(s)")
         for n, sec, text in hits:
             print(f"[L{n} | {sec}] {text}")
-        if args.full:
-            hits = search(REFS / "fulltext" / f"{y}.txt", patterns, 300, False)
+        full = REFS / "fulltext" / f"{y}.txt"
+        if args.full and not full.exists():
+            print(f"----- {y} full text: not available")
+        elif args.full:
+            hits = search(full, patterns, 300, False)
             print(f"----- {y} full text: {len(hits)} hit(s)")
             for n, _, text in hits:
                 print(f"[L{n}] {text}")
