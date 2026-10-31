@@ -30,6 +30,7 @@ Skills that need credentials ship a `config.example.yaml`; copy it to
 |---|---|
 | `ask-mfx` | MFX beamline operations assistant: hutch-python session, XTC checks, scans, PVs, beam readiness, gotchas |
 | `approval` | Only execute your plan upon my approval… |
+| `blister-gear-advisor` | Ski/snowboard gear advice from the Blister Winter Buyer's Guides 2022-23 → 2026-27 (notes, Spectrums, Best Of; full text git-ignored, rebuild with `scripts/extract_fulltext.sh`) |
 | `breakdown` | Break down the questions/tasks in my prompt… |
 | `clarify-before-research` | Ask me clarifying questions before research… |
 | `clarify` | Ask me clarifying questions if needed… |

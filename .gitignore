@@ -15,3 +15,6 @@ __pycache__/
 /beamtime-logger/
 /cds-bridge/
 /hutch-copilot
+
+# Copyrighted guide text (large); regenerate with blister-gear-advisor/scripts/extract_fulltext.sh
+/blister-gear-advisor/references/fulltext/
